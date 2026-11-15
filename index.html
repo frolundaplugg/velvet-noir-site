@@ -26,6 +26,7 @@
     }
     .btn-primary { background: #8b5cf6; color: #fff; }
     .btn-primary:hover { background: #7c3aed; }
+    .btn-primary:disabled { background: #5b21b6; cursor: not-allowed; opacity: 0.7; }
     .btn-secondary { background: #27272a; color: #d4d4d8; }
     .btn-secondary:hover { background: #3f3f46; }
 
@@ -89,11 +90,13 @@
     <h1>Exklusivt innehåll med fullständig anonymitet.</h1>
     <p class="subtitle">En modern plattform byggd för integritet, krypterad åtkomst och diskreta betalningar utan spårning.</p>
     
-    <form class="waitlist-form" onsubmit="joinWaitlist(event)">
-      <input type="email" id="email-input" placeholder="Ange din anonyma e-post..." required>
-      <button type="submit" class="btn-primary">Gå med i väntelistan</button>
+    <form class="waitlist-form" id="waitlist-form" onsubmit="joinWaitlist(event)">
+      <input type="hidden" name="access_key" value="793c0f2b-baf2-4fe9-b750-5d8b11fc2b2f">
+      <input type="hidden" name="subject" value="Ny anmälan till Velvet Noir väntelista!">
+      <input type="email" name="email" id="email-input" placeholder="Ange din anonyma e-post..." required>
+      <button type="submit" id="submit-btn" class="btn-primary">Gå med i väntelistan</button>
     </form>
-    <div id="confirmation-msg">Tack! Du är nu registrerad på väntelistan.</div>
+    <div id="confirmation-msg"></div>
 
     <div class="features">
       <div class="card" onclick="alert('All trafik dirigeras utan loggar eller IP-spårning.')">
@@ -122,13 +125,46 @@
     function leaveSite() {
       window.location.href = 'https://google.com';
     }
-    function joinWaitlist(event) {
+
+    async function joinWaitlist(event) {
       event.preventDefault();
-      const email = document.getElementById('email-input').value;
+      const form = document.getElementById('waitlist-form');
+      const btn = document.getElementById('submit-btn');
       const msg = document.getElementById('confirmation-msg');
-      msg.textContent = "Tack! " + email + " är nu tillagd på väntelistan.";
-      msg.style.display = 'block';
-      document.getElementById('email-input').value = '';
+      const email = document.getElementById('email-input').value;
+
+      btn.disabled = true;
+      btn.textContent = 'Skickar...';
+
+      const formData = new FormData(form);
+
+      try {
+        const response = await fetch('https://web3forms.com', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          msg.style.color = '#34d399';
+          msg.style.borderColor = 'rgba(52, 211, 153, 0.3)';
+          msg.style.background = 'rgba(52, 211, 153, 0.1)';
+          msg.textContent = 'Tack! ' + email + ' är nu registrerad och skickad.';
+          msg.style.display = 'block';
+          form.reset();
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (error) {
+        msg.style.color = '#f87171';
+        msg.style.borderColor = 'rgba(248, 113, 113, 0.3)';
+        msg.style.background = 'rgba(248, 113, 113, 0.1)';
+        msg.textContent = 'Något gick fel. Försök igen om en stund.';
+        msg.style.display = 'block';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Gå med i väntelistan';
+      }
     }
   </script>
 
